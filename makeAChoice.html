@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>选择困难助手</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f4f4f9;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bolder;
+      height: 40px;
+    }
+
+    .mode-switcher {
+      display: flex;
+      align-items: center;
+      /* justify-content: space-around; */
+      padding: 10px 0px;
+    }
+
+    .mode-switcher button {
+      margin: 0 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+
+    .potions-button,
+    .count-button {}
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    input {
+      height: 20px;
+    }
+
+    .button {
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-left: 20px;
+    }
+
+    .button:first-child {
+      margin-left: 0;
+    }
+
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    .second-button {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    .second-button:first-child {
+      margin-left: 0px;
+    }
+
+    .function-button-wrapper {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      /* justify-content: center; */
+    }
+
+    .mode {
+      display: none;
+      /* margin-top: 5px; */
+    }
+
+    .active {
+      display: block;
+    }
+
+    .active-mode-button {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: green;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .option-item-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li {
+      background: #fff;
+      margin: 0.3rem 0;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      margin-left: 1rem;
+      padding: 0.3rem 0.6rem;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    #optionInput,
+    #countInput {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 60%;
+    }
+
+    #countInput {
+      width: 40%;
+    }
+
+    #optionInput:focus,
+    #countInput:focus {
+      outline: none;
+      border-color: #66afe9;
+      box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    }
+
+    #errorMessge {
+      color: red;
+      font-size: 14px;
+    }
+
+    select {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      font-size: 1rem;
+      /* margin-left: 1rem; */
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #66afe9;
+      box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    }
+
+    #savedListsContainer, #deleteOptionListBtn {
+      display: none;
+    }
+  </style>
+</head>
+
+<body onload="initialize()">
+  <div class="title">选择困难助手</div>
+
+  <div class="mode-switcher">
+    <div id="optionsButton" class="button mode-button potions-button" onclick="switchMode('options')">
+      选项模式
+    </div>
+    <div id="countButton" class="button mode-button count-button" onclick="switchMode('count')">
+      总数模式
+    </div>
+  </div>
+
+  <div id="errorMessge"></div>
+  <div id="options" class="mode">
+    <div class="input-wrapper">
+      <label>请输入选项：</label>
+      <input autofocus type="text" id="optionInput" onkeydown="handleKeyPress(event)" />
+    </div>
+    <div class="function-button-wrapper">
+      <div class="button second-button" onclick="addOption()">添加</div>
+      <div class="button second-button" onclick="chooseFromOptions()">帮我选一个</div>
+      <div id="saveListBtn" class="button second-button" onclick="saveOptionList()">保存为常用列表</div>
+    </div>
+    <div class="function-button-wrapper">
+      <div id="savedListsContainer">
+        <select id="savedLists" onchange="loadOptionList()">
+          <option value="">选择常用列表</option>
+        </select>
+      </div>
+      <div id="deleteOptionListBtn" class="button second-button" onclick="deleteOptionList()">删除常用列表</div>
+    </div>
+    <ul id="optionList"></ul>
+    <div class="result" id="optionResult"></div>
+  </div>
+
+  <div id="count" class="mode">
+    <div class="input-wrapper">
+      <label>请输入选项数量：</label>
+      <input autofocus type="number" id="countInput" min="2" />
+    </div>
+    <div class="function-button-wrapper">
+      <div class="button second-button" onclick="chooseByCount()">帮我选一个</div>
+    </div>
+    <div class="result" id="countResult"></div>
+  </div>
+
+  <script>
+    let options = [];
+    const STORAGE_KEY = 'decision_helper_saved_lists';
+
+    function initialize() {
+      switchMode('options');
+      document.getElementById('optionInput').focus();
+      loadSavedLists();
+    }
+    function switchMode(mode) {
+      document.querySelectorAll('.mode').forEach(div => div.classList.remove('active'));
+      document.getElementById(mode).classList.add('active');
+      document.querySelectorAll('.mode-button').forEach(div => div.classList.remove('active-mode-button'));
+      document.getElementById(`${mode}Button`).classList.add('active-mode-button');
+      // 清除结果和选项
+      document.getElementById('countResult').textContent = '';
+      document.getElementById('optionResult').textContent = '';
+      options = [];
+      document.getElementById('optionList').innerHTML = '';
+      const optionInput = document.getElementById('optionInput');
+      const countInput = document.getElementById('countInput');
+      optionInput.value = '';
+      countInput.value = '';
+      document.getElementById('errorMessge').textContent = '';
+      switch (mode) {
+        case 'options':
+          optionInput.focus();
+          break;
+        case 'count':
+          countInput.focus();
+          break;
+        default:
+          break;
+      }
+    }
+
+    function chooseByCount() {
+      const count = parseInt(document.getElementById('countInput').value);
+      if (isNaN(count) || count < 2) {
+        document.getElementById('errorMessge').textContent = '请输入大于等于2的有效数字';
+        // alert('请输入大于等于2的有效数字');
+        return;
+      }
+      document.getElementById('errorMessge').textContent = '';
+      const chosen = Math.floor(window.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 * count) + 1;
+      document.getElementById('countResult').textContent = `我选：第 ${chosen} 个选项`;
+    }
+
+    function addOption() {
+      const input = document.getElementById('optionInput');
+      const value = input.value.trim();
+      if (value === '') return;
+      options.push(value);
+      renderOptionList();
+      input.value = '';
+      input.focus();
+    }
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') {
+        addOption();
+      }
+    }
+    function removeOption(index) {
+      options.splice(index, 1);
+      renderOptionList();
+    }
+    function renderOptionList() {
+      const list = document.getElementById('optionList');
+      list.innerHTML = '';
+      options.forEach((opt, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="option-item-wrapper"><span>${opt}</span><button class="delete-btn" onclick="removeOption(${index})">删除</button></div>`;
+        list.appendChild(li);
+      });
+    }
+    function chooseFromOptions() {
+      if (options.length < 2) {
+        document.getElementById('errorMessge').textContent = '请至少输入两个选项';
+        // alert('请至少输入两个选项');
+        return;
+      }
+      document.getElementById('errorMessge').textContent = '';
+      const index = Math.floor(window.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 * options.length);
+      document.getElementById('optionResult').textContent = `我选：${options[index]}`;
+    }
+
+    function saveOptionList() {
+      if (options.length === 0) {
+        alert('请先输入选项！');
+        return;
+      }
+      const name = prompt("请输入列表名称：");
+      if (!name) return;
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      saved[name] = options;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      loadSavedLists();
+      alert("保存成功！");
+    }
+
+    function loadSavedLists() {
+      const select = document.getElementById('savedLists');
+      const buttonIds = ['savedListsContainer', 'deleteOptionListBtn'];
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      select.innerHTML = '<option value="">选择常用列表</option>';
+      if (Object.keys(saved).length > 0) {
+        showButtons(buttonIds);
+        for (let key in saved) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = key;
+          select.appendChild(opt);
+        }
+      } else {
+        hideButtons(buttonIds);
+      }
+    }
+
+    function showButtons(ids = []) {
+      for (const id of ids) {
+        const ele = document.getElementById(id);
+        ele.style.display = 'block';
+      }
+    }
+
+    function hideButtons(ids = []) {
+      for (const id of ids) {
+        const ele = document.getElementById(id);
+        ele.style.display = 'none';
+      }
+    }
+
+    function loadOptionList() {
+      const selected = document.getElementById('savedLists').value;
+      if (!selected) {
+        // select.innerHTML = '<option value="">选择常用列表</option>';
+        options = [];
+        renderOptionList();
+        return;
+      };
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (saved[selected]) {
+        options = [...saved[selected]];
+        renderOptionList();
+      }
+    }
+    function deleteOptionList() {
+      const selected = document.getElementById('savedLists').value;
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (!selected) {
+        if(confirm('当前选项将会删除所有常用列表，确认删除吗？')) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
+          loadSavedLists();
+        } else {
+          return;
+        }
+      } else {
+        delete saved[selected];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        loadSavedLists();
+      };
+      alert("删除成功！");
+    }
+  </script>
+</body>
+
+</html>
